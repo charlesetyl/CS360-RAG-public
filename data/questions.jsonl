@@ -1,0 +1,2 @@
+{"id":0, "question":"How many nodes are inland?", "answer": 26}
+{"id":1, "question":"Which node is connected as the upstream of the highest flow?", "answer": "hangzhou"}

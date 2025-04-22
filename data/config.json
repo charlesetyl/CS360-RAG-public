@@ -1,0 +1,8 @@
+{
+    "OPENAI_API_KEY": "",
+    "MYSQL": {
+        "HOST": "localhost",
+        "USER": "root",
+        "PASSWORD": "1234"
+    }
+}

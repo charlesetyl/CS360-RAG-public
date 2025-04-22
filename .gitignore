@@ -4,7 +4,6 @@ __pycache__/
 *$py.class
 
 # C extensions
-*.so
 
 # Distribution / packaging
 .Python
@@ -172,3 +171,8 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+
+hidden_questions.jsonl
+/src/gold_rag.py
+/src/hidden_eval.py
