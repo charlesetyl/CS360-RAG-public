@@ -134,7 +134,7 @@ python ./eval/hidden_eval.py
 
 **Scoring Breakdown:**
 
-- The total score is 23 points (capped at 20 points if 20+ are achieved):
+- The total score is 20 points (**capped** at 20 points if 20+ are achieved):
     - **Accuracy (13 Points)**:
         - 1 point per correct answer.
     - **Execution Time (10 Points)**:
