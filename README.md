@@ -55,7 +55,7 @@ sudo mysql -u root -p
 **Clone the CS360 RAG Project Repository:**
 
 ```bash
-git clone https://github.com/asmath472/CS360-RAG.git
+git clone https://github.com/asmath472/CS360-RAG-public.git
 cd CS360-RAG
 export PYTHONPATH=.
 ```
