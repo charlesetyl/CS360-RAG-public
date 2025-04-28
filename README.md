@@ -173,3 +173,7 @@ response: ChatResponse = chat(model=model_name, options={'temperature': 0}, mess
     }
 ])
 ```
+4. You can run `hidden_eval` individually via `--id`. For example, following code shows how you can examine question number `5` individually:
+```bash
+python ./eval/hidden_eval.py --id 5
+```
