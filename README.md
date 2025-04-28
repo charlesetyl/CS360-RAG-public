@@ -56,7 +56,7 @@ sudo mysql -u root -p
 
 ```bash
 git clone https://github.com/asmath472/CS360-RAG-public.git
-cd CS360-RAG
+cd CS360-RAG-public
 export PYTHONPATH=.
 ```
 You may apply `export PYTHONPATH=.` for each terminal.
