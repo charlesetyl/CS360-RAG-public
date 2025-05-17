@@ -151,7 +151,7 @@ python ./eval/hidden_eval.py
 - For multiple answers, answer should be selected by `ORDER BY {answer} DESC LIMIT 1`. For example:
     - For text: Choose the lexicographically **last** string.
     - For numbers: Choose the **largest** value.
-- For decimal answers, round(반올림) to three decimal places (e.g., 123.456->123.46).
+- For decimal answers, round(반올림) to **two** decimal places (e.g., 123.456->123.46).
 - Your returned answer must maintain its correct data type.
 
 **Grading Note:**
