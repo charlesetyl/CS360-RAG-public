@@ -99,6 +99,8 @@ CREATE TABLE node_country(    node_name     VARCHAR(30), country_name    VARCHAR
                     print("[DEBUG] Raw DB row:", row)
 
                 if row is None or len(row) == 0:
+                    #DEBUG
+                    print("[DEBUG] Raw DB row:", row)
                     return None
 
                 value = row[0]
