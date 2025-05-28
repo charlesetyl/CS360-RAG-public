@@ -1,9 +1,9 @@
 # src/sqlgen.py
 from ollama import chat, ChatResponse
 import sqlparse
+import re
 
 def answer_gen(textual_question, db_engine, model_name):
-    # Database schema provided to the model
     schema = """
 CREATE TABLE country(
     country_name VARCHAR(30),
@@ -40,15 +40,14 @@ CREATE TABLE node_country(
 );
     """
 
-    # Create prompt for the model
     prompt = (
-        f"You are an AI that generates SQL queries based on a database schema and a natural language question.\n"
-        f"Schema:\n{schema}\n\n"
-        f"Question:\n{textual_question}\n\n"
-        f"Return ONLY the SQL query needed to answer the question."
+        f"You are a SQL expert. Based on the following schema and natural language question, generate ONLY the correct SQL query.\n"
+        f"DO NOT provide explanations, comments, or markdown formatting.\n"
+        f"\nSchema:\n{schema}\n"
+        f"\nQuestion:\n{textual_question}\n"
+        f"\nSQL:"
     )
 
-    # Call the model
     response: ChatResponse = chat(model=model_name, messages=[
         {
             'role': 'user',
@@ -56,16 +55,15 @@ CREATE TABLE node_country(
         }
     ])
 
-    # Extract and clean the SQL query from the model's output
-    sql_query = response.message.content.strip()
-    # Optional: format or validate query (e.g. remove markdown formatting or language tags)
-    if sql_query.lower().startswith("```sql"):
-        sql_query = sql_query.strip("`").split("\n", 1)[1].rsplit("```", 1)[0].strip()
+    # Extract clean SQL query from response
+    raw_output = response.message.content.strip()
 
-    # Optionally, format the query nicely (not required for execution)
+    # Remove markdown code fences if present
+    sql_query = re.sub(r"```sql|```", "", raw_output).strip()
+
+    # Optionally format it for clarity (not required)
     sql_query = sqlparse.format(sql_query, strip_comments=True).strip()
 
-    # Execute the SQL query and return the result
     try:
         query_result = db_engine.query(sql_query)
     except Exception as e:
