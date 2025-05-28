@@ -1,5 +1,4 @@
-from ollama import chat
-from ollama.types import ChatResponse
+from ollama import chat, ChatResponse
 
 def answer_gen(textual_question: str, db_engine, model_name: str) -> str:   
     # TODO
