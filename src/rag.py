@@ -19,9 +19,9 @@ CREATE TABLE node_country(    node_name     VARCHAR(30), country_name    VARCHAR
     # 모델에 전달할 프롬프트를 구성합니다.
     prompt = (
         f"You are a SQL query generator. "
-        f"Given a schema and a textual question, generate only a valid SQL query. "
-        f"Return ONLY the SQL query result, No explanations, no markdown. "
-        f"Use ORDER BY ... DESC LIMIT 1 if multiple answers.\n\n"
+        f"Given a schema and a natural language question, generate a valid SQL query. "
+        f"Return ONLY the SQL query without explanations or formatting. "
+        f"Use 'ORDER BY ... DESC LIMIT 1' for multiple possible answers.\n\n"
         f"Schema:\n{schema}\n\n"
         f"Question:\n{textual_question}\n\n"
         f"SQL:"
@@ -36,21 +36,21 @@ CREATE TABLE node_country(    node_name     VARCHAR(30), country_name    VARCHAR
     ])
     
     # 응답에서 SQL 쿼리를 추출합니다.
-
-    # Extract and clean the SQL query from the model's output
+    # Get and clean the raw SQL string
     sql_query = response.message.content.strip()
-    # Optional: format or validate query (e.g. remove markdown formatting or language tags)
-    if sql_query.lower().startswith("```sql"):
+
+    # Remove surrounding markdown or language tags
+    if sql_query.lower().startswith("```sql") or sql_query.lower().startswith("```"):
         sql_query = sql_query.strip("`").split("\n", 1)[1].rsplit("```", 1)[0].strip()
 
-    # Optionally, format the query nicely (not required for execution)
-    sql_query = response.message.content.format(sql_query, strip_comments=True).strip()
+    # Final cleanup: remove lingering semicolons or invalid characters
+    sql_query = sql_query.rstrip(';')
 
-    # Execute the SQL query and return the result
     try:
+        # Execute SQL and get result
         query_result = db_engine.query(sql_query)
     except Exception as e:
-        query_result = f"Error executing SQL query: {e}"
+        return f"Error executing SQL query: {e}"
 
     return query_result
 
