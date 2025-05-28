@@ -1,7 +1,8 @@
-# src/sqlgen.py
+# src/rag.py
 from ollama import chat, ChatResponse
 import sqlparse
 import re
+import pandas as pd
 
 def answer_gen(textual_question, db_engine, model_name):
     schema = """
@@ -43,30 +44,45 @@ CREATE TABLE node_country(
     prompt = (
         f"You are a SQL expert. Based on the following schema and natural language question, generate ONLY the correct SQL query.\n"
         f"DO NOT provide explanations, comments, or markdown formatting.\n"
-        f"\nSchema:\n{schema}\n"
-        f"\nQuestion:\n{textual_question}\n"
-        f"\nSQL:"
+        f"Make sure to use 'ORDER BY ... DESC LIMIT 1' if multiple results are possible.\n"
+        f"Schema:\n{schema}\n"
+        f"Question:\n{textual_question}\n"
+        f"SQL:"
     )
 
-    response: ChatResponse = chat(model=model_name, messages=[
+    response: ChatResponse = chat(model=model_name, options={'temperature': 0}, messages=[
         {
             'role': 'user',
             'content': prompt,
         }
     ])
 
-    # Extract clean SQL query from response
     raw_output = response.message.content.strip()
-
-    # Remove markdown code fences if present
     sql_query = re.sub(r"```sql|```", "", raw_output).strip()
-
-    # Optionally format it for clarity (not required)
     sql_query = sqlparse.format(sql_query, strip_comments=True).strip()
 
     try:
         query_result = db_engine.query(sql_query)
     except Exception as e:
-        query_result = f"Error executing SQL query: {e}"
+        return f"SQL Execution Error: {e}"
 
-    return query_result
+    if not query_result or len(query_result) == 0:
+        return None
+
+    # Convert result to DataFrame for easier processing
+    df = pd.DataFrame(query_result)
+
+    if df.empty or df.shape[1] == 0:
+        return None
+
+    value = df.iloc[0, 0]
+
+    # Post-process result
+    if isinstance(value, float):
+        return round(value, 2)
+    elif isinstance(value, (int, bool)):
+        return value
+    elif isinstance(value, str):
+        return value.strip()
+    else:
+        return str(value)
