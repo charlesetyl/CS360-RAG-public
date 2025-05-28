@@ -95,6 +95,8 @@ CREATE TABLE node_country(    node_name     VARCHAR(30), country_name    VARCHAR
                 with db_engine._engine.connect() as conn:
                     result = conn.execute(text(sql_query))
                     row = result.fetchone()
+                    #DEBUG
+                    print("[DEBUG] Raw DB row:", row)
 
                 if row is None or len(row) == 0:
                     return None
@@ -114,7 +116,9 @@ CREATE TABLE node_country(    node_name     VARCHAR(30), country_name    VARCHAR
                 else:
                     return str(value).strip()
 
-            except Exception:
+            except Exception as e:
+                #DEBUG
+                print("[ERROR]", e)
                 return None
 
     # Global error handling because
