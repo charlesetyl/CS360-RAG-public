@@ -1,4 +1,5 @@
 from ollama import chat, ChatResponse
+from sqlalchemy import text
 
 def answer_gen(textual_question: str, db_engine, model_name: str) -> str:   
     # TODO
