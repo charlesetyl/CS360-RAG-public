@@ -3,6 +3,7 @@ from sqlalchemy import text
 
 def answer_gen(textual_question: str, db_engine, model_name: str) -> str:   
     
+    # 데이터베이스의 스키마 정보를 가져옵니다.
     schema = """
 CREATE TABLE country( country_name  VARCHAR(30), trade_port    VARCHAR(30), development FLOAT, PRIMARY KEY (country_name));
 
@@ -13,6 +14,8 @@ CREATE TABLE flow(    upstream    VARCHAR(30),    downstream VARCHAR(30),    flo
 CREATE TABLE node_country(    node_name     VARCHAR(30), country_name    VARCHAR(30),    is_home BOOLEAN, merchant BOOLEAN,    base_trading_power FLOAT,    calculated_trading_power FLOAT,   PRIMARY KEY (node_name, country_name));
     """
 
+    # 모델에 전달할 프롬프트를 구성합니다.
+    # prompt structure: 1. identity, 2. instructions, 3. examples
     prompt = f"""
     
     You are a MySQL query writer.
@@ -21,10 +24,8 @@ CREATE TABLE node_country(    node_name     VARCHAR(30), country_name    VARCHAR
 
     Instructions:
     - Use SELECT statements only.
-    - Do NOT include explanations, markdown, or text — only return the SQL query.
+    - ONLY return the SQL query, NOT explanations, markdown, or text
     - If multiple rows are returned, always ORDER BY the answer DESC LIMIT 1.
-    - Assume booleans use TRUE/FALSE, not 1/0.
-    - Use proper joins when needed.
 
     # schema: {schema}
 
@@ -45,21 +46,19 @@ CREATE TABLE node_country(    node_name     VARCHAR(30), country_name    VARCHAR
 
     Question: {textual_question}
     Answer:"""
-    
+
+
     try:
-        response: ChatResponse = chat(
-            model=model_name,
-            options={"temperature": 0},
-            messages=[{"role": "user", "content": prompt}],
+        # ollama의 chat API를 호출하여 모델로부터 응답을 받습니다.
+        response: ChatResponse = chat( model=model_name, options={"temperature": 0}, messages=[
+            {
+                'role': 'user',
+                'content': prompt}],
         )
 
-        # Extract and clean the SQL query from the model's output
-        sql_query = response.message.content.strip()
-        print("\n================== LLM GENERATED SQL ==================")
-        print(sql_query)
-        print("=======================================================\n")
+        # 응답에서 SQL 쿼리를 추출합니다.
         sql_query = (
-            sql_query
+            response.message.content
             .replace("```sql", "")
             .replace("```", "")
             .replace("= 1", "= TRUE")
@@ -67,48 +66,25 @@ CREATE TABLE node_country(    node_name     VARCHAR(30), country_name    VARCHAR
             .strip()
         )
 
-        # This part adds the ORDER BY and LIMIT if needed
-        if "GROUP BY" in sql_query and "ORDER BY" not in sql_query:
-            sql_query += " ORDER BY COUNT(*) DESC LIMIT 1"
-        elif (
-            "SELECT COUNT" not in sql_query
-            and "SELECT SUM" not in sql_query
-            and "SELECT AVG" not in sql_query
-            and "SELECT MIN" not in sql_query
-            and "SELECT MAX" not in sql_query
-            and "ORDER BY" not in sql_query
-            and "LIMIT" not in sql_query
-        ):
-            sql_query += " ORDER BY 1 DESC LIMIT 1"
-
-        # This part executes the SQL query --> after the LLM generates the query based on
-        # your Natural Language Question, this part executes the query and returns you the answer
         try:
-            with db_engine._engine.connect() as conn:
-                result = conn.execute(text(sql_query))
-                row = result.fetchone()
+            result = db_engine._engine.connect().execute(text(sql_query))
+            row = result.fetchone()
 
-            if row is None or len(row) == 0:
+            if row is None:
                 return None
 
             value = row[0]
 
-            # This part converts the value to the correct type
-            if isinstance(value, str) and value.replace(".", "", 1).isdigit():
-                value = float(value)
-
-            if isinstance(value, float) and value.is_integer():
-                return int(value)
+            if isinstance(value, int):
+                return value
             elif isinstance(value, float):
                 return round(value, 2)
             elif isinstance(value, int):
-                return value
+                return str(value).strip()
             else:
                 return str(value).strip()
-
         except Exception:
              return None
-
-# Global error handling because
+        
     except Exception:
         return None
