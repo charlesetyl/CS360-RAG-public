@@ -1,7 +1,7 @@
 from ollama import chat, ChatResponse  
 from sqlalchemy import text  
 
-def answer_gen(textual_question: str, db_engine, model_name: str) -> str:   
+def answer_gen(textual_question, db_engine, model_name):   
     
     # 데이터베이스의 스키마 정보를 가져옵니다.
     schema = """
